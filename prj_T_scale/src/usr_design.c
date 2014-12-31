@@ -55,7 +55,8 @@
 #define APP_HEART_RATE_MEASUREMENT_TO     1400 // 14s
 #define APP_HRPS_ENERGY_EXPENDED_STEP     50
 
-#define EVENT_BUTTON1_PRESS_ID            0
+//#define EVENT_BUTTON1_PRESS_ID            0
+#define	EVENT_UART_TX_ID										1
 
 ///IOS Connection Parameter
 #define IOS_CONN_INTV_MAX                              0x0010
@@ -67,6 +68,12 @@
  * GLOBAL VARIABLE DEFINITIONS
  ****************************************************************************************
  */
+ 
+void app_event_pt_tx_handler(void)
+{
+	ke_evt_set(1UL<<EVENT_UART_TX_ID);
+} 
+ 
 #if (defined(QN_ADV_WDT))
 static void adv_wdt_to_handler(void)
 {
@@ -213,6 +220,18 @@ void app_task_msg_hdl(ke_msg_id_t const msgid, void const *param)
 
         case QPPS_CFG_INDNTF_IND:
             break;
+				case QPPS_DAVA_VAL_IND:
+							{
+									///leo add
+									struct qpps_data_val_ind* par = (struct qpps_data_val_ind*)param;
+									for (uint8_t i=0;i<par->length;i++)
+											QPRINTF("%02X ",par->data[i]);
+									QPRINTF("\r\n");
+									uart_write(QN_UART1, &(par->data[0]),par->length,app_event_pt_tx_handler );	
+							}
+						break;
+				case QPPS_DATA_SEND_CFM:
+						break;
 
         default:
             break;
@@ -281,6 +300,13 @@ int app_gap_adv_intv_update_timer_handler(ke_msg_id_t const msgid, void const *p
  */
 void usr_sleep_restore(void)
 {
+	
+#if defined(QN_COM_UART)
+    uart_init(QN_COM_UART, USARTx_CLK(0), UART_9600);
+    uart_tx_enable(QN_COM_UART, MASK_ENABLE);
+    uart_rx_enable(QN_COM_UART, MASK_ENABLE);
+#endif	
+	
 #if QN_DBG_PRINT
     uart_init(QN_DEBUG_UART, USARTx_CLK(0), UART_9600);
     uart_tx_enable(QN_DEBUG_UART, MASK_ENABLE);

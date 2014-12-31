@@ -174,6 +174,8 @@ int app_qpps_data_send_cfm_handler(ke_msg_id_t const msgid,
     {
         QPRINTF("QPPS send error %d.\r\n", param->status);
     }
+				app_task_msg_hdl(msgid,param);
+
 
     return (KE_MSG_CONSUMED);
 }
@@ -246,6 +248,7 @@ int app_qpps_data_ind_handler(ke_msg_id_t const msgid,
         QPRINTF("len=%d, I%02X", param->length, param->data[0]);
     }
     QPRINTF("\r\n");
+		app_task_msg_hdl(msgid,param);
 
     return (KE_MSG_CONSUMED);
 }

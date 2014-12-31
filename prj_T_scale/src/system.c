@@ -45,10 +45,14 @@ static void SystemIOCfg(void)
                              | P05_GPIO_5_PIN_CTRL
                              | P06_SW_DAT_PIN_CTRL
                              | P07_SW_CLK_PIN_CTRL
-
+#if !defined(CFG_COM_UART)
                              | P10_GPIO_8_PIN_CTRL
                              | P11_GPIO_9_PIN_CTRL
-                             | P12_GPIO_10_PIN_CTRL
+#else	
+														 | P10_UART1_RXD_PIN_CTRL
+														 | P11_UART1_TXD_PIN_CTRL
+#endif
+														 | P12_GPIO_10_PIN_CTRL
                              | P13_GPIO_11_PIN_CTRL
                              | P14_GPIO_12_PIN_CTRL
                              | P15_GPIO_13_PIN_CTRL
@@ -176,6 +180,12 @@ void SystemInit(void)
 
     // Button
     button_init();
+		
+#if defined(QN_COM_UART)
+    uart_init(QN_COM_UART, USARTx_CLK(0), UART_9600);
+    uart_tx_enable(QN_COM_UART, MASK_ENABLE);
+    uart_rx_enable(QN_COM_UART, MASK_ENABLE);
+#endif
 
 #if (QN_DBG_PRINT)
     uart_init(QN_DEBUG_UART, USARTx_CLK(0), UART_9600);
