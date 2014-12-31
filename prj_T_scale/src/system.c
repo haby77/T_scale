@@ -64,7 +64,11 @@ static void SystemIOCfg(void)
                              | P26_GPIO_22_PIN_CTRL
                              | P27_GPIO_23_PIN_CTRL
 
+#if	!defined(CFG_JOYSTICK)
                              | P30_GPIO_24_PIN_CTRL
+#else
+														 | P30_AIN0_PIN_CTRL
+#endif
                              | P31_GPIO_25_PIN_CTRL
 #if (defined(CFG_HCI_SPI))                             
                              | P32_SPI0_DIN_PIN_CTRL        //P3.2 spi1 data in

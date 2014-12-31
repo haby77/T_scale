@@ -20,8 +20,17 @@
  */
 #if !defined(QN_9021_MINIDK)
 
+#if !defined(QN_9021_FIREFLY)
+
 #define BUTTON1_PIN    (GPIO_P14)
 #define BUTTON2_PIN    (GPIO_P15)
+
+#else
+
+#define	BUTTON1_PIN	 (GPIO_P03)
+#define	BUTTON2_PIN	 (GPIO_P02)  // no pin in QN9021
+
+#endif
 
 #else
 

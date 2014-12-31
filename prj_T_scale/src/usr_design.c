@@ -36,6 +36,7 @@
 #include "wdt.h"
 #endif
 #include "sleep.h"
+#include "usr_task.h"
 
 /*
  * MACRO DEFINITIONS
@@ -358,21 +359,21 @@ int app_button_timer_handler(ke_msg_id_t const msgid, void const *param,
  * @return If the message was consumed or not.
  ****************************************************************************************
  */
-void app_event_button1_press_handler(void)
-{
-#if ((QN_DEEP_SLEEP_EN) && (!QN_32K_RCO))
-    if (sleep_env.deep_sleep)
-    {
-        sleep_env.deep_sleep = false;
-        // start 32k xtal wakeup timer
-        wakeup_32k_xtal_start_timer();
-    }
-#endif
+//void app_event_button1_press_handler(void)
+//{
+//#if ((QN_DEEP_SLEEP_EN) && (!QN_32K_RCO))
+//    if (sleep_env.deep_sleep)
+//    {
+//        sleep_env.deep_sleep = false;
+//        // start 32k xtal wakeup timer
+//        wakeup_32k_xtal_start_timer();
+//    }
+//#endif
 
-    // delay 20ms to debounce
-    ke_timer_set(APP_SYS_BUTTON_1_TIMER, TASK_APP, 2);
-    ke_evt_clear(1UL << EVENT_BUTTON1_PRESS_ID);
-}
+//    // delay 20ms to debounce
+//    ke_timer_set(APP_SYS_BUTTON_1_TIMER, TASK_APP, 2);
+//    ke_evt_clear(1UL << EVENT_BUTTON1_PRESS_ID);
+//}
 
 /**
  ****************************************************************************************
@@ -381,28 +382,28 @@ void app_event_button1_press_handler(void)
  *  Button 1 is used to enter adv mode.
  ****************************************************************************************
  */
-void usr_button1_cb(void)
-{
-    // If BLE is in the sleep mode, wakeup it.
-    if(ble_ext_wakeup_allow())
-    {
-#if ((QN_DEEP_SLEEP_EN) && (!QN_32K_RCO))
-        if (sleep_env.deep_sleep)
-        {
-            wakeup_32k_xtal_switch_clk();
-        }
-#endif
+//void usr_button1_cb(void)
+//{
+//    // If BLE is in the sleep mode, wakeup it.
+//    if(ble_ext_wakeup_allow())
+//    {
+//#if ((QN_DEEP_SLEEP_EN) && (!QN_32K_RCO))
+//        if (sleep_env.deep_sleep)
+//        {
+//            wakeup_32k_xtal_switch_clk();
+//        }
+//#endif
 
-        sw_wakeup_ble_hw();
+//        sw_wakeup_ble_hw();
 
-    }
+//    }
 
-    // key debounce:
-    // We can set a soft timer to debounce.
-    // After wakeup BLE, the timer is not calibrated immediately and it is not precise.
-    // So We set a event, in the event handle, set the soft timer.
-    ke_evt_set(1UL << EVENT_BUTTON1_PRESS_ID);
-}
+//    // key debounce:
+//    // We can set a soft timer to debounce.
+//    // After wakeup BLE, the timer is not calibrated immediately and it is not precise.
+//    // So We set a event, in the event handle, set the soft timer.
+//    ke_evt_set(1UL << EVENT_BUTTON1_PRESS_ID);
+//}
 
 /**
  ****************************************************************************************
@@ -439,6 +440,15 @@ void gpio_interrupt_callback(enum gpio_pin pin)
  */
 void usr_init(void)
 {
+		task_usr_desc_register();  
+    ke_state_set(TASK_USR, USR_DISABLE);
+	
+		if(KE_EVENT_OK != ke_evt_callback_set(EVENT_ADC_KEY_SAMPLE_CMP_ID,
+                                            app_event_adc_key_sample_cmp_handler))
+    {
+        ASSERT_ERR(0);
+    }
+	
     if(KE_EVENT_OK != ke_evt_callback_set(EVENT_BUTTON1_PRESS_ID, 
                                             app_event_button1_press_handler))
     {

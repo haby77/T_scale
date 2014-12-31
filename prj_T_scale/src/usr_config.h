@@ -23,6 +23,11 @@
 /// Work mode: CFG_WM_SOC, CFG_WM_NP, CFG_WM_HCI
 #define CFG_WM_SOC
 
+/// Evaluation board indication
+// The GPIOs used for QN9021 miniDK's LED and button are different from QN9020 miniDK¡¢Firefly_BLE.
+// If the QN9021 miniDK or QN_9021_FIREFLY is used, the following macro shall be defined.
+#define QN_9021_FIREFLY
+
 /// Easy ACI
 // #define CFG_EACI
 
@@ -52,6 +57,9 @@
 #if (defined(CFG_FW_V18))
 #define CFG_ADV_WDT
 #endif
+
+///FireBlue Joystick button
+#define	CFG_JOYSTICK
 
 /// Memory retention
 #define CFG_MEM_RETENTION   (MEM_BLOCK1 | MEM_BLOCK2 | MEM_BLOCK3 | MEM_BLOCK4 | MEM_BLOCK6 | MEM_BLOCK7)
