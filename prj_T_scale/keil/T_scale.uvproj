@@ -528,6 +528,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\src\app\qpps\app_qpps_task.c</FilePath>
             </File>
+            <File>
+              <FileName>app_com.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\app_com.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

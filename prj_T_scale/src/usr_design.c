@@ -38,6 +38,10 @@
 #include "sleep.h"
 #include "usr_task.h"
 
+#if QN_COM
+#include "app_com.h"
+#endif
+
 /*
  * MACRO DEFINITIONS
  ****************************************************************************************
@@ -55,7 +59,8 @@
 #define APP_HEART_RATE_MEASUREMENT_TO     1400 // 14s
 #define APP_HRPS_ENERGY_EXPENDED_STEP     50
 
-#define EVENT_BUTTON1_PRESS_ID            0
+//#define EVENT_BUTTON1_PRESS_ID            0
+//#define	EVENT_UART_TX_ID										1
 
 ///IOS Connection Parameter
 #define IOS_CONN_INTV_MAX                              0x0010
@@ -67,6 +72,12 @@
  * GLOBAL VARIABLE DEFINITIONS
  ****************************************************************************************
  */
+ 
+void app_event_pt_tx_handler(void)
+{
+	ke_evt_set(1UL<<EVENT_UART_TX_ID);
+} 
+ 
 #if (defined(QN_ADV_WDT))
 static void adv_wdt_to_handler(void)
 {
@@ -146,6 +157,9 @@ void app_task_msg_hdl(ke_msg_id_t const msgid, void const *param)
     switch(msgid)
     {
         case GAP_SET_MODE_REQ_CMP_EVT:
+#if QN_COM
+				    com_env.com_state = COM_ADV;
+#endif
             if(APP_IDLE == ke_state_get(TASK_APP))
             {
                 usr_led1_set(LED_ON_DUR_ADV_FAST, LED_OFF_DUR_ADV_FAST);
@@ -164,11 +178,17 @@ void app_task_msg_hdl(ke_msg_id_t const msgid, void const *param)
             break;
 
         case GAP_ADV_REQ_CMP_EVT:
+#if QN_COM
+				    com_env.com_state = COM_DEEPSLEEP;
+#endif
             usr_led1_set(LED_ON_DUR_IDLE, LED_OFF_DUR_IDLE);
             ke_timer_clear(APP_ADV_INTV_UPDATE_TIMER, TASK_APP);
             break;
 
         case GAP_DISCON_CMP_EVT:
+#if QN_COM
+				    com_env.com_state = COM_DEEPSLEEP;
+#endif
             usr_led1_set(LED_ON_DUR_IDLE, LED_OFF_DUR_IDLE);
 
             // start adv
@@ -179,6 +199,9 @@ void app_task_msg_hdl(ke_msg_id_t const msgid, void const *param)
             break;
 
         case GAP_LE_CREATE_CONN_REQ_CMP_EVT:
+#if QN_COM
+				    com_env.com_state = COM_CONN_FULL;
+#endif
             if(((struct gap_le_create_conn_req_cmp_evt *)param)->conn_info.status == CO_ERROR_NO_ERROR)
             {
                 if(GAP_PERIPHERAL_SLV == app_get_role())
@@ -212,7 +235,41 @@ void app_task_msg_hdl(ke_msg_id_t const msgid, void const *param)
             break;
 
         case QPPS_CFG_INDNTF_IND:
-            break;
+				{
+            uint8_t bit_num = get_bit_num(app_qpps_env->char_status);
+            if (bit_num >= QPPS_VAL_CHAR_NUM)  
+            {                
+                //com_uart_rx_start();
+                com_env.com_state = COM_CONN_EMPTY;
+            }
+						else
+						{
+								com_env.com_state = COM_CONN_FULL;
+						}
+            
+        }break;
+				case QPPS_DAVA_VAL_IND:
+							{
+									///leo add
+									struct qpps_data_val_ind* par = (struct qpps_data_val_ind*)param;
+									for (uint8_t i=0;i<par->length;i++)
+											QPRINTF("%02X ",par->data[i]);
+									QPRINTF("\r\n");
+									com_pdu_send(par->length,&(par->data[0]));
+									//uart_write(QN_UART1, &(par->data[0]),par->length,app_event_pt_tx_handler );	
+							}
+						break;
+				case QPPS_DATA_SEND_CFM:
+						{
+								uint8_t bit_num = get_bit_num(app_qpps_env->char_status);
+								if (bit_num >= QPPS_VAL_CHAR_NUM)
+								{
+										//com_uart_rx_start();
+										com_env.com_state = COM_CONN_EMPTY;
+								}
+								//ke_evt_set(1UL << EVENT_GPIO_TXWAKEUP_ID);
+						}
+						break;
 
         default:
             break;
@@ -281,10 +338,29 @@ int app_gap_adv_intv_update_timer_handler(ke_msg_id_t const msgid, void const *p
  */
 void usr_sleep_restore(void)
 {
+	
+#if defined(QN_COM_UART)
+    uart_init(QN_COM_UART, USARTx_CLK(0), UART_9600);
+    uart_tx_enable(QN_COM_UART, MASK_ENABLE);
+    uart_rx_enable(QN_COM_UART, MASK_ENABLE);
+#endif	
+	
 #if QN_DBG_PRINT
     uart_init(QN_DEBUG_UART, USARTx_CLK(0), UART_9600);
     uart_tx_enable(QN_DEBUG_UART, MASK_ENABLE);
     uart_rx_enable(QN_DEBUG_UART, MASK_ENABLE);
+#endif
+	
+#if (defined(CFG_HCI_UART))
+    // Initialize HCI UART port
+    uart_init(QN_HCI_PORT, USARTx_CLK(0), UART_9600);
+    uart_tx_enable(QN_HCI_PORT, MASK_ENABLE);
+    uart_rx_enable(QN_HCI_PORT, MASK_ENABLE);
+#elif (defined(CFG_HCI_SPI))
+    // Initialize HCI SPI port
+    spi_init(QN_HCI_PORT, SPI_BITRATE(1000000), SPI_8BIT, SPI_SLAVE_MOD);
+    gpio_set_direction_field(CFG_HCI_SPI_WR_CTRL_PIN, (uint32_t)GPIO_OUTPUT);
+    gpio_write_pin(CFG_HCI_SPI_WR_CTRL_PIN, GPIO_HIGH);
 #endif
 
 #if (defined(QN_ADV_WDT))
@@ -442,6 +518,8 @@ void usr_init(void)
 {
 		task_usr_desc_register();  
     ke_state_set(TASK_USR, USR_DISABLE);
+	
+		com_init();
 	
 		if(KE_EVENT_OK != ke_evt_callback_set(EVENT_ADC_KEY_SAMPLE_CMP_ID,
                                             app_event_adc_key_sample_cmp_handler))

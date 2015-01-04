@@ -213,6 +213,15 @@
 #define QN_CSRK_SUPPORT             1
 #endif
 
+///
+#if defined(CFG_COM_UART)
+		#define		QN_COM_UART					CFG_COM_UART
+		#define QN_COM										1		
+#else
+		#define		QN_COM_UART					
+		#define QN_COM										0
+#endif
+
 /// Debug print option
 #if (defined(CFG_DBG_PRINT))
     // QPRINTF enable

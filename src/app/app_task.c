@@ -41,12 +41,16 @@
 #include "app_eaci_trans.h"
 #endif
 
+#if	QN_COM
+#include "app_com.h"
+#endif
+
 /*
  * FUNCTION DEFINITIONS
  ****************************************************************************************
  */
 
-#if (QN_DEMO_MENU || QN_EACI)
+#if (QN_DEMO_MENU || QN_EACI ||QN_COM)
 /**
  ****************************************************************************************
  * @brief Handles UART data indication.
@@ -160,9 +164,17 @@ const struct ke_msg_handler app_default_state[] =
 #ifdef QN_BLE_TIME_SUPPORT
     {APP_SYS_TIME_CHECK_TIMER,              (ke_msg_func_t) app_sys_time_check_timer_handler},
 #endif
+		
 
-#if (QN_EACI || QN_DEMO_MENU)
+//    {APP_PT_RX_TIMEOUT_TIMER,              (ke_msg_func_t) app_pt_rx_timeout_handler},
+//    {APP_PT_UART_RX_DONE_IND,                     (ke_msg_func_t) app_pt_uart_rx_done_ind_handler},
+
+
+#if (QN_EACI || QN_DEMO_MENU || QN_COM)
     {APP_SYS_UART_DATA_IND,                 (ke_msg_func_t) app_uart_data_ind_handler},
+    {APP_COM_RX_TIMEOUT_TIMER,              (ke_msg_func_t) app_com_rx_timeout_handler},
+		{APP_COM_UART_RX_DONE_IND,              (ke_msg_func_t) app_com_uart_rx_done_ind_handler},
+
 #endif
 
 #if (QN_32K_RCO)

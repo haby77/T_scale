@@ -73,6 +73,9 @@
 /// BLE MAX sleep duration
 #define CFG_BLE_MAX_SLEEP_DUR   0x3e80  // 625us * 0x3e80 = 10s
 
+///
+#define	CFG_COM_UART										QN_UART1
+
 /// Transport layer UART interface used in network processor mode and controller mode
 #define CFG_HCI_UART                    QN_UART0
 /// Transport layer SPI interface used in network processor mode and controller mode

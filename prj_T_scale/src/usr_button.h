@@ -6,7 +6,7 @@
 #include "adc.h"
 
 #define EVENT_BUTTON1_PRESS_ID						0
-#define EVENT_ADC_KEY_SAMPLE_CMP_ID				4
+#define EVENT_ADC_KEY_SAMPLE_CMP_ID				6
 #define APP_KEY_CHEAK_PRIOD                         10   //100ms对按键轮询一次
 
 enum button_state
