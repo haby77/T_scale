@@ -71,7 +71,7 @@ void com_event_uart_rx_timeout_handler(void)
 int app_com_rx_timeout_handler(ke_msg_id_t const msgid, void const *param,
                                ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-    uart_rx_int_enable(QN_UART1, MASK_DISABLE);  //disable uart rx interrupt 
+    uart_rx_int_enable(QN_COM_UART, MASK_DISABLE);  //disable uart rx interrupt 
     struct app_uart_data_ind *com_data = ke_msg_alloc(APP_COM_UART_RX_DONE_IND,
                                  TASK_APP,
                                  TASK_APP,
