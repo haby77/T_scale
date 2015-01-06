@@ -56,8 +56,9 @@
 {
     //go to start tx state
     com_env.tx_state = COM_UART_TX_ONGOING;
-
+		
     uart_write(QN_COM_UART, ((uint8_t *)&msg->param), msg->param_len, app_event_com_tx_handler);
+		delay(0x1fff);
 }
 
 void com_event_uart_rx_timeout_handler(void)
